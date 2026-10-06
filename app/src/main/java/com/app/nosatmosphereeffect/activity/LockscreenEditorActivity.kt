@@ -25,6 +25,11 @@ import com.app.nosatmosphereeffect.ui.model.ThemePresetCatalog
 import com.app.nosatmosphereeffect.ui.screens.LockscreenEditorScreen
 import com.app.nosatmosphereeffect.ui.theme.AppearancePreferences
 import com.app.nosatmosphereeffect.ui.theme.AtmoEngineTheme
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -34,22 +39,22 @@ import java.util.UUID
 
 class LockscreenEditorActivity : ComponentActivity() {
 
-    private var wallpaperBitmap by androidx.compose.runtime.mutableStateOf<Bitmap?>(null)
-    private var maskBitmap by androidx.compose.runtime.mutableStateOf<Bitmap?>(null)
-    private var isSegmenting by androidx.compose.runtime.mutableStateOf(false)
-    private var maskFailureReason by androidx.compose.runtime.mutableStateOf<String?>(null)
+    private var wallpaperBitmap by mutableStateOf<Bitmap?>(null)
+    private var maskBitmap by mutableStateOf<Bitmap?>(null)
+    private var isSegmenting by mutableStateOf(false)
+    private var maskFailureReason by mutableStateOf<String?>(null)
 
-    private var activeEffectId by androidx.compose.runtime.mutableStateOf("ORIGINAL")
-    private var isAtmosphereGlassEnabled by androidx.compose.runtime.mutableStateOf(false)
-    private var clockStyle by androidx.compose.runtime.mutableStateOf(ClockStyle.GLASS)
-    private var customFontId by androidx.compose.runtime.mutableStateOf<String?>(null)
-    private var clockSize by androidx.compose.runtime.mutableFloatStateOf(AtmosphereClockPolicy.DEFAULT_HEIGHT)
-    private var clockOpacity by androidx.compose.runtime.mutableFloatStateOf(1.0f)
-    private var clockColor by androidx.compose.runtime.mutableIntStateOf(ClockPalette.AUTO)
-    private var depthEnabled by androidx.compose.runtime.mutableStateOf(true)
+    private var activeEffectId by mutableStateOf("ORIGINAL")
+    private var isAtmosphereGlassEnabled by mutableStateOf(false)
+    private var clockStyle by mutableStateOf(ClockStyle.GLASS)
+    private var customFontId by mutableStateOf<String?>(null)
+    private var clockSize by mutableFloatStateOf(AtmosphereClockPolicy.DEFAULT_HEIGHT)
+    private var clockOpacity by mutableFloatStateOf(1.0f)
+    private var clockColor by mutableIntStateOf(ClockPalette.AUTO)
+    private var depthEnabled by mutableStateOf(true)
 
-    private var customFonts by androidx.compose.runtime.mutableStateOf<List<CustomFontInfo>>(emptyList())
-    private var isSaving by androidx.compose.runtime.mutableStateOf(false)
+    private var customFonts by mutableStateOf<List<CustomFontInfo>>(emptyList())
+    private var isSaving by mutableStateOf(false)
 
     private var coordinator: SubjectMaskCoordinator? = null
 
@@ -192,8 +197,9 @@ class LockscreenEditorActivity : ComponentActivity() {
     private fun requestSubjectSegmentation(bitmap: Bitmap) {
         isSegmenting = true
         coordinator?.close()
+        val coordHolder = arrayOfNulls<SubjectMaskCoordinator>(1)
         val coord = SubjectMaskCoordinator(this) {
-            val pending = coord?.takePending()
+            val pending = coordHolder[0]?.takePending()
             if (pending != null && !isFinishing && !isDestroyed) {
                 runOnUiThread {
                     maskBitmap = pending.bitmap
@@ -201,6 +207,7 @@ class LockscreenEditorActivity : ComponentActivity() {
                 }
             }
         }
+        coordHolder[0] = coord
         coordinator = coord
         coord.configure(true)
         lifecycleScope.launch(Dispatchers.Default) {

@@ -94,6 +94,8 @@ object CustomFontManager {
         }
     }
 
+    fun loadTypeface(context: Context, fontId: String): Typeface? = getTypeface(context, fontId)
+
     fun getTypeface(context: Context, fontId: String): Typeface? {
         if (!fontId.startsWith("custom_")) return null
         typefaceCache[fontId]?.let { return it }

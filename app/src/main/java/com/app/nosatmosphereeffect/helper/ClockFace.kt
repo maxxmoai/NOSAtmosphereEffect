@@ -353,6 +353,16 @@ private fun displayHeightPx(context: Context): Float {
  */
 class ClockFaceRenderer(private val context: Context) {
 
+    var style: ClockStyle = ClockStyle.DEFAULT
+        set(value) {
+            if (field != value) {
+                field = value
+                atlas = ClockGlyphAtlas.of(value, customTypeface, customFontId)
+                adaptiveFace.stacked = value.stacked
+                invalidateLayout()
+            }
+        }
+
     var customTypeface: Typeface? = null
         set(value) {
             if (field != value) {
@@ -390,16 +400,6 @@ class ClockFaceRenderer(private val context: Context) {
         } catch (_: Throwable) {
         }
     }
-
-    var style: ClockStyle = ClockStyle.DEFAULT
-        set(value) {
-            if (field != value) {
-                field = value
-                atlas = ClockGlyphAtlas.of(value, customTypeface, customFontId)
-                adaptiveFace.stacked = value.stacked
-                invalidateLayout()
-            }
-        }
 
     /** Draws the day and date, wherever [datePlacement] puts it. */
     var showDate: Boolean = false

@@ -148,7 +148,7 @@ fun LockscreenEditorScreen(
             height = clockSize,
             widthScale = 1.0f
         ),
-        faceBox = faceBox,
+        face = faceBox,
         screenAspect = 0.46f
     )
 
