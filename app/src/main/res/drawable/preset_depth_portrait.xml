@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="1080dp"
+    android:height="2400dp"
+    android:viewportWidth="1080"
+    android:viewportHeight="2400">
+    <path
+        android:pathData="M0,0 L1080,0 L1080,2400 L0,2400 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:startX="540"
+                android:startY="0"
+                android:endX="540"
+                android:endY="2400"
+                android:type="linear">
+                <item android:offset="0.0" android:color="#FF7C2D12" />
+                <item android:offset="0.35" android:color="#FFC2410C" />
+                <item android:offset="0.7" android:color="#FFEA580C" />
+                <item android:offset="1.0" android:color="#FF431407" />
+            </gradient>
+        </aapt:attr>
+    </path>
+    <!-- Glowing sun in background -->
+    <path
+        android:pathData="M340,650 A200,200 0 1,0 740,650 A200,200 0 1,0 340,650 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:startX="540"
+                android:startY="450"
+                android:endX="540"
+                android:endY="850"
+                android:type="radial"
+                android:gradientRadius="200">
+                <item android:offset="0.0" android:color="#FFFFF7ED" />
+                <item android:offset="0.5" android:color="#FFFFEDD5" />
+                <item android:offset="1.0" android:color="#00FED7AA" />
+            </gradient>
+        </aapt:attr>
+    </path>
+    <!-- High-contrast foreground subject silhouette (perfect for depth segmentation) -->
+    <path
+        android:pathData="M540,680 C620,680 680,740 680,820 C680,900 620,950 540,950 C460,950 400,900 400,820 C400,740 460,680 540,680 Z"
+        android:fillColor="#FF18181B" />
+    <path
+        android:pathData="M300,1050 C380,970 700,970 780,1050 C860,1130 920,1300 960,1700 L120,1700 C160,1300 220,1130 300,1050 Z"
+        android:fillColor="#FF18181B" />
+</vector>

@@ -1,0 +1,31 @@
+*.iml
+.gradle
+local.properties
+/.idea
+.DS_Store
+/build
+/captures
+/app/debug
+/app/release
+/app/build
+/app/v33
+/app/v36
+/app/v36Play
+/app/v36Fdroid
+/app/v33Fdroid
+/app/v33Play
+/app/v35Fdroid
+/app/v35Play
+/app/src/main/assets/shaders/vulkan
+/app/keystores
+.externalNativeBuild
+.cxx
+.kotlin
+# Keystore files (NEVER commit these)
+*.jks
+*.keystore
+*.pem
+*.p12
+*.spv
+# Google Services
+google-services.json

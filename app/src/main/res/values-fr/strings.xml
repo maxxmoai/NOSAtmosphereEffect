@@ -1,0 +1,84 @@
+<resources>
+    <string name="app_name">Atmo Engine</string>
+    <string name="share_target_label">Définir avec Atmo Engine</string>
+
+    <string name="app_title">Atmo Engine</string>
+    <string name="app_subtitle">Atmosphère &amp; Effets de Profondeur iOS 16</string>
+    <string name="app_logo_desc">Logo de l\'application</string>
+    <string name="status_instruction">Choisissez un effet et une image pour\ncréer votre fond d\'écran animé personnalisé.</string>
+    <string name="action_select_effect">Choisir un effet</string>
+    <string name="action_change_effect">Modifier ou mettre à jour l\'effet</string>
+    <string name="action_apply">Appliquer</string>
+    <string name="image_alignment_instructions">Pincez pour zoomer et glissez pour ajuster</string>
+    <string name="dimness_level">Niveau d\'assombrissement</string>
+    <string name="update_wallpaper_dimness">Mettre à jour l\'assombrissement</string>
+    <string name="fine_tune">Ajustements précis</string>
+
+    <!-- Dashboard -->
+    <string name="dashboard_preset_themes">Thèmes Prédéfinis</string>
+    <string name="dashboard_preset_themes_desc">Styles esthétiques prêts à l\'emploi avec effet de profondeur</string>
+    <string name="dashboard_create_from_gallery">Créer depuis ma galerie</string>
+    <string name="dashboard_wallpaper_active">Fond d\'écran actif</string>
+    <string name="dashboard_wallpaper_inactive">Aucun fond d\'écran actif</string>
+    <string name="dashboard_tap_to_customize">Touchez pour personnaliser votre fond d\'écran</string>
+    <string name="dashboard_settings">Paramètres</string>
+
+    <!-- Editor -->
+    <string name="editor_title">Personnaliser le fond d\'écran</string>
+    <string name="editor_tab_style">Style</string>
+    <string name="editor_tab_clock">Horloge</string>
+    <string name="editor_tab_depth">Profondeur</string>
+    <string name="editor_button_cancel">Annuler</string>
+    <string name="editor_button_apply">Définir le fond d\'écran</string>
+    <string name="editor_saving">Enregistrement en cours…</string>
+    <string name="editor_effect_reeded_glass">Ajouter du verre strié</string>
+    <string name="editor_effect_reeded_glass_desc">Ajoute une texture de verre élégante sur le fond d\'écran</string>
+    <string name="editor_clock_typography">Typographie</string>
+    <string name="editor_clock_import_font">Importer une police (.ttf/.otf)</string>
+    <string name="editor_clock_custom_fonts">Polices personnalisées</string>
+    <string name="editor_clock_size">Taille de l\'horloge</string>
+    <string name="editor_clock_opacity">Opacité</string>
+    <string name="editor_clock_color">Couleur &amp; Teinte</string>
+    <string name="editor_depth_title">Effet de profondeur iPhone</string>
+    <string name="editor_depth_desc">Place l\'horloge derrière le sujet détecté automatiquement</string>
+    <string name="editor_depth_status_ready">Sujet détecté avec succès</string>
+    <string name="editor_depth_status_processing">Détection du sujet avec ML Kit…</string>
+    <string name="editor_depth_status_none">Aucun sujet net détecté</string>
+
+    <!-- Settings -->
+    <string name="settings_title">Paramètres</string>
+    <string name="settings_language">Langue</string>
+    <string name="settings_language_desc">Choisir la langue d\'affichage de l\'application</string>
+    <string name="settings_language_en">English</string>
+    <string name="settings_language_fr">Français</string>
+    <string name="settings_appearance">Apparence</string>
+    <string name="settings_theme_mode">Thème</string>
+    <string name="settings_theme_dark">Mode sombre</string>
+    <string name="settings_theme_light">Mode clair</string>
+    <string name="settings_theme_system">Suivre le système</string>
+    <string name="settings_fonts_manage">Gérer les polices personnalisées</string>
+    <string name="settings_fonts_empty">Aucune police personnalisée importée pour le moment.</string>
+    <string name="settings_about">À propos</string>
+    <string name="settings_about_desc">Atmo Engine · Fond d\'écran animé &amp; composition de profondeur</string>
+
+    <!-- Renderer -->
+    <string name="renderer_status_label">Moteur de rendu</string>
+    <string name="renderer_vulkan_active">Vulkan actif</string>
+    <string name="renderer_vulkan_version">Version %1$s</string>
+    <string name="renderer_opengl_active">OpenGL ES actif</string>
+    <string name="renderer_vulkan_fallback_reason">Repli Vulkan : %1$s</string>
+    <string name="renderer_current_wallpaper_renderer">Moteur de rendu actuel</string>
+    <string name="renderer_backend_vulkan">Vulkan</string>
+    <string name="renderer_backend_opengl">OpenGL ES</string>
+    <string name="renderer_preference_group">Rendu graphique</string>
+    <string name="renderer_preference_label">API graphique</string>
+    <string name="renderer_preference_automatic">Automatique (recommandé)</string>
+    <string name="renderer_preference_vulkan">Vulkan</string>
+    <string name="renderer_preference_opengl">OpenGL ES</string>
+    <string name="renderer_preference_automatic_helper">Utilise Vulkan lorsqu\'il est compatible et bascule en toute sécurité sur OpenGL ES. S\'applique immédiatement aux prévisualisations et au fond d\'écran actif.</string>
+    <string name="renderer_preference_vulkan_helper">Demande Vulkan, mais bascule sur OpenGL ES si l\'appareil ne le supporte pas. S\'applique immédiatement.</string>
+    <string name="renderer_preference_opengl_helper">Utilise toujours OpenGL ES sans sonder Vulkan. S\'applique immédiatement.</string>
+    <string name="experimental">Expérimental</string>
+    <string name="manualCroppingWillBeDisabled">(Le recadrage manuel sera désactivé)</string>
+
+</resources>

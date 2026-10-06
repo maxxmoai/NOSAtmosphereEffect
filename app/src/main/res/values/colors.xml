@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="brand_primary">#D0BCFF</color>
+    <color name="brand_on_primary">#381E72</color>
+    <color name="fixed_background">#000000</color>
+    <color name="fixed_on_surface">#FFFFFF</color>
+    <color name="fixed_on_surface_variant">#B3FFFFFF</color>
+
+    <color name="black">#000000</color>
+    <color name="white">#FFFFFF</color>
+    <color name="white_alpha_70">#B3FFFFFF</color>
+
+    <color name="seed_red">#D71920</color>
+    <color name="button_inactive">#8E8E8E</color>
+
+
+</resources>

@@ -1,0 +1,215 @@
+name: Android Release
+
+on:
+  push:
+    branches: [ "master" ]
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v5
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: gradle
+
+      - name: Install Android NDK
+        run: |
+          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || true
+          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "ndk;29.0.14206865"
+
+      - name: Restore Keystore from GitHub Secrets
+        run: |
+          mkdir -p app/keystores
+          echo "${{ secrets.SIGNING_KEY }}" | base64 --decode > app/keystores/release-key.jks
+
+      - name: Extract build metadata
+        run: |
+          VERSION_NAME=$(grep "versionName =" app/build.gradle.kts | awk -F\" '{print $2}')
+          echo "Found version name: $VERSION_NAME"
+          echo "VERSION_NAME=$VERSION_NAME" >> "$GITHUB_ENV"
+
+      - name: Grant execute permission for Gradle
+        run: chmod +x gradlew
+
+      - name: Build and sign all release variants via Gradle
+        env:
+          KEY_STORE_PASSWORD: ${{ secrets.KEY_STORE_PASSWORD }}
+          ALIAS: ${{ secrets.ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          ./gradlew \
+            assembleV36PlayRelease \
+            assembleV36FdroidRelease \
+            assembleV33PlayRelease \
+            assembleV33FdroidRelease \
+            assembleV36FolderRelease \
+            assembleV33FolderRelease \
+            bundleV35PlayRelease
+
+      - name: Verify model isolation and APK sizes
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          find_apk() {
+            local dir="$1"
+            local flavor="$2"
+            if [ -f "$dir/app-$flavor-release.apk" ]; then
+              echo "$dir/app-$flavor-release.apk"
+            elif [ -f "$dir/app-$flavor-release-unsigned.apk" ]; then
+              echo "$dir/app-$flavor-release-unsigned.apk"
+            else
+              echo "$dir/app-$flavor-release.apk"
+            fi
+          }
+
+          APK_16_MLKIT=$(find_apk "app/build/outputs/apk/v36Play/release" "v36-play")
+          APK_16_FOSS=$(find_apk "app/build/outputs/apk/v36Fdroid/release" "v36-fdroid")
+          APK_13_MLKIT=$(find_apk "app/build/outputs/apk/v33Play/release" "v33-play")
+          APK_13_FOSS=$(find_apk "app/build/outputs/apk/v33Fdroid/release" "v33-fdroid")
+          APK_16_FOLDER=$(find_apk "app/build/outputs/apk/v36Folder/release" "v36-folder")
+          APK_13_FOLDER=$(find_apk "app/build/outputs/apk/v33Folder/release" "v33-folder")
+          AAB_15_MLKIT="app/build/outputs/bundle/v35PlayRelease/app-v35-play-release.aab"
+
+          assert_no_foss_payload() {
+            local archive="$1"
+            local listing="$RUNNER_TEMP/$(basename "$archive").contents"
+            unzip -Z1 "$archive" > "$listing"
+            if grep -Eq '(^|/)assets/models/|libtensorflowlite_jni\.so' "$listing"; then
+              echo "FOSS model/runtime leaked into ML Kit artifact: $archive"
+              exit 1
+            fi
+          }
+
+          assert_has_foss_payload() {
+            local archive="$1"
+            local listing="$RUNNER_TEMP/$(basename "$archive").contents"
+            unzip -Z1 "$archive" > "$listing"
+            grep -Eq '(^|/)assets/models/u2netp_320x320\.tflite$' "$listing"
+            grep -Eq '(^|/)lib/arm64-v8a/libtensorflowlite_jni\.so$' "$listing"
+          }
+
+          assert_no_foss_payload "$APK_16_MLKIT"
+          assert_no_foss_payload "$APK_13_MLKIT"
+          assert_no_foss_payload "$AAB_15_MLKIT"
+          assert_no_foss_payload "$APK_16_FOLDER"
+          assert_no_foss_payload "$APK_13_FOLDER"
+
+          # Photo access is the reason the folder flavor exists; it must never
+          # reach the Play Store or F-Droid builds.
+          BUILD_TOOLS_DIR=$(find "$ANDROID_HOME/build-tools" -mindepth 1 -maxdepth 1 -type d -print | sort -V | tail -n 1)
+          AAPT2="$BUILD_TOOLS_DIR/aapt2"
+          test -x "$AAPT2"
+          assert_photo_permission() {
+            local apk="$1"
+            local expected="$2"
+            if "$AAPT2" dump permissions "$apk" | grep -q "android.permission.READ_MEDIA_IMAGES"; then
+              [ "$expected" = "yes" ] || { echo "Unexpected photo permission in $apk"; exit 1; }
+            else
+              [ "$expected" = "no" ] || { echo "Folder APK is missing READ_MEDIA_IMAGES: $apk"; exit 1; }
+            fi
+          }
+          assert_photo_permission "$APK_16_MLKIT" no
+          assert_photo_permission "$APK_13_MLKIT" no
+          assert_photo_permission "$APK_16_FOSS" no
+          assert_photo_permission "$APK_13_FOSS" no
+          assert_photo_permission "$APK_16_FOLDER" yes
+          assert_photo_permission "$APK_13_FOLDER" yes
+          if unzip -p "$AAB_15_MLKIT" base/manifest/AndroidManifest.xml | grep -aq "READ_MEDIA_IMAGES"; then
+            echo "Unexpected photo permission in the Play Store bundle"
+            exit 1
+          fi
+          assert_has_foss_payload "$APK_16_FOSS"
+          assert_has_foss_payload "$APK_13_FOSS"
+
+          APK_16_MLKIT_SIZE=$(stat -c \%s "$APK_16_MLKIT")
+          APK_16_FOSS_SIZE=$(stat -c \%s "$APK_16_FOSS")
+          APK_13_MLKIT_SIZE=$(stat -c \%s "$APK_13_MLKIT")
+          APK_13_FOSS_SIZE=$(stat -c \%s "$APK_13_FOSS")
+          MAX_MLKIT_APK_SIZE=$((10 * 1024 * 1024))
+
+          if (( APK_16_MLKIT_SIZE >= APK_16_FOSS_SIZE )); then
+            echo "Android 16 ML Kit APK is not smaller than its FOSS APK."
+            exit 1
+          fi
+          if (( APK_13_MLKIT_SIZE >= APK_13_FOSS_SIZE )); then
+            echo "Android 13 ML Kit APK is not smaller than its FOSS APK."
+            exit 1
+          fi
+          if (( APK_16_MLKIT_SIZE >= MAX_MLKIT_APK_SIZE || APK_13_MLKIT_SIZE >= MAX_MLKIT_APK_SIZE )); then
+            echo "An ML Kit APK exceeded the 10 MiB size guard."
+            exit 1
+          fi
+
+          {
+            echo "### Release artifact sizes"
+            echo '```text'
+            du -h "$APK_16_MLKIT" "$APK_16_FOSS" "$APK_13_MLKIT" "$APK_13_FOSS" \
+              "$APK_16_FOLDER" "$APK_13_FOLDER" "$AAB_15_MLKIT"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Verify signatures and package release artifacts
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          BUILD_TOOLS_DIR=$(find "$ANDROID_HOME/build-tools" -mindepth 1 -maxdepth 1 -type d -print | sort -V | tail -n 1)
+          APKSIGNER="$BUILD_TOOLS_DIR/apksigner"
+          test -x "$APKSIGNER"
+
+          verify_and_copy() {
+            local source_apk="$1"
+            local output_apk="$2"
+            "$APKSIGNER" verify --verbose --print-certs "$source_apk"
+            cp "$source_apk" "$output_apk"
+          }
+
+          verify_and_copy "app/build/outputs/apk/v36Play/release/app-v36-play-release.apk" "atmo-engine-android-16-plus-mlkit.apk"
+          verify_and_copy "app/build/outputs/apk/v36Fdroid/release/app-v36-fdroid-release.apk" "atmo-engine-android-16-plus-foss.apk"
+          verify_and_copy "app/build/outputs/apk/v33Play/release/app-v33-play-release.apk" "atmo-engine-android-13-plus-mlkit.apk"
+          verify_and_copy "app/build/outputs/apk/v33Fdroid/release/app-v33-fdroid-release.apk" "atmo-engine-android-13-plus-foss-fdroid.apk"
+          verify_and_copy "app/build/outputs/apk/v36Folder/release/app-v36-folder-release.apk" "atmo-engine-android-16-plus-mlkit-folder.apk"
+          verify_and_copy "app/build/outputs/apk/v33Folder/release/app-v33-folder-release.apk" "atmo-engine-android-13-plus-mlkit-folder.apk"
+
+          cp \
+            app/build/outputs/bundle/v35PlayRelease/app-v35-play-release.aab \
+            atmo-engine-playstore-android-15-plus-mlkit.aab
+
+          sha256sum \
+            atmo-engine-android-16-plus-mlkit.apk \
+            atmo-engine-android-16-plus-foss.apk \
+            atmo-engine-android-13-plus-mlkit.apk \
+            atmo-engine-android-13-plus-foss-fdroid.apk \
+            atmo-engine-android-16-plus-mlkit-folder.apk \
+            atmo-engine-android-13-plus-mlkit-folder.apk \
+            atmo-engine-playstore-android-15-plus-mlkit.aab \
+            > SHA256SUMS.txt
+
+      - name: Create release
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: v${{ env.VERSION_NAME }}
+          target_commitish: ${{ github.sha }}
+          name: Release v${{ env.VERSION_NAME }}
+          generate_release_notes: true
+          draft: false
+          prerelease: false
+          files: |
+            atmo-engine-android-16-plus-mlkit.apk
+            atmo-engine-android-16-plus-foss.apk
+            atmo-engine-android-13-plus-mlkit.apk
+            atmo-engine-android-13-plus-foss-fdroid.apk
+            atmo-engine-android-16-plus-mlkit-folder.apk
+            atmo-engine-android-13-plus-mlkit-folder.apk
+            atmo-engine-playstore-android-15-plus-mlkit.aab
+            SHA256SUMS.txt
